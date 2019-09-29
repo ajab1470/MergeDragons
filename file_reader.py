@@ -13,7 +13,7 @@ def time_file_parser(filename):
             entries are separated by a space
             species name is separated from entries by a space
     :param filename: name of the file
-    :return: a dictionary of the data | {species(string): {flower level(int): number of nods(int)}}
+    :return: a dictionary of the data | {species(string): {flower level(int): number of nods(float)}}
     """
     dragon_harvest_times = {}
     with open(filename) as file:
@@ -21,10 +21,11 @@ def time_file_parser(filename):
         for line in file:
             line = line.strip().split(' ')
             species = line[0]
+            line = line[1:]
             entries = {}
             for entry in line:
                 entry = entry.split(':')
-                entries[entry[0]] = entry[1]
+                entries[int(entry[0])] = float(entry[1])
             if species in dragon_harvest_times and not duplicates:
                 print('One or more lines marked duplicate and ignored')
                 duplicates = True
