@@ -24,6 +24,49 @@ TIMES_FILE = "harvest_times.txt"
 SECONDS_PER_NOD = 0.8
 
 
+def nods_to_seconds(harvest_times):
+    """
+    convert all nod times to seconds. Will mutate original dictionary
+    :param harvest_times: a harvest time dictionary, as specified by file_reader.time_file_parser
+    """
+    for dragon in harvest_times:
+        for entry in harvest_times[dragon]:
+            harvest_times[dragon][entry] = harvest_times[dragon][entry]*SECONDS_PER_NOD
+
+
+def harvest_time(harvest_times, dragons, goal_harvests, flower_lvl):
+    """
+    calculates the total time taken for the given dragons to make the specified number of harvests from the given tree
+    :param harvest_times: the harvest_times dictionary
+    :param dragons: the number of dragons
+    :param goal_harvests: the number of harvests
+    :param flower_lvl: the level of tree being harvested
+    :return: the time taken to harvest
+    """
+    # Get list of times for dragons in the dragon list harvesting the given flower level
+    times = []  # the times taken to harvest from that level of tree
+    for x in dragons:
+        if x in harvest_times:
+            if flower_lvl in harvest_times[x]:
+                times.append(harvest_times[x][flower_lvl])
+            else:
+                print("No data exists for " + x + " dragon at flower level " + str(flower_lvl) +
+                      ". This dragon will be ignored")
+        else:
+            print("No data exists for " + x + " dragon at flower level " + str(flower_lvl) +
+                  ". This dragon will be ignored")
+
+    # Simulate the harvests
+    harvests = 0
+    seconds = 0
+    while harvests != goal_harvests:
+        seconds += 1
+        for time in times:
+            if seconds % time == 0:
+                harvests += 1
+    return seconds
+
+
 def amt_each_item(goal_lvl, current_lvl, goal_amt):
     """
     Determines the amount of each orb obtained by only merging by fives
@@ -80,12 +123,12 @@ def main():
     To use prompt, enter nothing
     """
     print("Note: Life essences are level 0, life orbs are level 1, etc., so a level 9 life orb is level 9 in this program.")
-    print("      This program is only optimized for harvesting life orbs from life trees.\n")
+    print("      This program is only optimized for harvesting life orbs from life flowers.\n")
 
     if len(sys.argv) == 1:
         goal_lvl = int(input("What level are you aiming for? "))
         goal_amt = int(input("How many of those do you want? "))
-        current_lvl = int(input("What level of things are you harvesting? "))
+        current_lvl = int(input("What level of orbs are you harvesting? "))
     else:
         if len(sys.argv) < 4:
             print("Usage: [level of goal orbs] [amount of goal orbs] [level of orbs currently harvested]",
@@ -102,8 +145,18 @@ def main():
     print("If you are always merging by five, you will have (lvl:amt):")
     pprint(amt_each_item(goal_lvl, current_lvl, goal_amt))
 
-    harvest_times = file_reader.time_file_parser(TIMES_FILE)
+    # TODO command line stuff
+    if input("Find out how long this will take with your dragons?(Y/N) ") == 'N':   # or len(sys.argv == 4)
+        print("Happy merging!")
+        return
 
+    harvest_times = file_reader.time_file_parser(TIMES_FILE)
+    num_dragons = int(input("How many dragons do you have? "))
+    dragons = []
+    for i in range(num_dragons):
+        dragons.append(input("dragon " + str(i) + " species: ").lower())
+    flower_lvl = int(input("What level of life flower are you harvesting from? "))
+    harvest_time(harvest_times, dragons, num_five_matches(goal_lvl, current_lvl, goal_amt), flower_lvl)
 
 
 if __name__ == "__main__":
